@@ -1,0 +1,884 @@
+{
+  "info": {
+    "_postman_id": "photo-gallery-insy7314-complete",
+    "name": "Photo Gallery API - Complete Tests",
+    "description": "Complete Postman tests for all Photo Gallery API routes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "photoId",
+      "value": ""
+    },
+    {
+      "key": "signupEmail",
+      "value": ""
+    },
+    {
+      "key": "secondUserId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": " AUTH TESTS",
+      "item": [
+        {
+          "name": "1.1 Signup - Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Token is returned', () => {",
+                  "  pm.expect(jsonData).to.have.property('token');",
+                  "  pm.expect(jsonData.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('User data is returned without password', () => {",
+                  "  pm.expect(jsonData.user).to.have.property('_id');",
+                  "  pm.expect(jsonData.user).to.have.property('username');",
+                  "  pm.expect(jsonData.user).to.have.property('email');",
+                  "  pm.expect(jsonData.user).to.have.property('role');",
+                  "  pm.expect(jsonData.user).to.not.have.property('password');",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('token', jsonData.token);",
+                  "pm.collectionVariables.set('userId', jsonData.user._id);",
+                  "pm.collectionVariables.set('signupEmail', jsonData.user.email);",
+                  "",
+                  "console.log(' User created! Token saved.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser_{{timestamp}}\",\n  \"email\": \"test_{{timestamp}}@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Login - Existing User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Token is returned', () => {",
+                  "  pm.expect(jsonData).to.have.property('token');",
+                  "  pm.expect(jsonData.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Password is not returned', () => {",
+                  "  pm.expect(jsonData.user).to.not.have.property('password');",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('token', jsonData.token);",
+                  "pm.collectionVariables.set('userId', jsonData.user._id);",
+                  "",
+                  "console.log(' Login successful! Token updated.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{signupEmail}}\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Login - Invalid Credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', () => {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message is returned', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('message');",
+                  "});",
+                  "",
+                  "console.log(' Invalid login test passed!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"wrong@example.com\",\n  \"password\": \"WrongPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": " USER TESTS",
+      "item": [
+        {
+          "name": "2.1 Get My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Profile has required fields', () => {",
+                  "  pm.expect(jsonData).to.have.property('_id');",
+                  "  pm.expect(jsonData).to.have.property('username');",
+                  "  pm.expect(jsonData).to.have.property('email');",
+                  "  pm.expect(jsonData).to.have.property('role');",
+                  "});",
+                  "",
+                  "pm.test('Password is excluded', () => {",
+                  "  pm.expect(jsonData).to.not.have.property('password');",
+                  "});",
+                  "",
+                  "console.log(' Profile retrieved!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Update My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Username was updated', () => {",
+                  "  pm.expect(jsonData.username).to.eql('UpdatedUsername');",
+                  "});",
+                  "",
+                  "console.log(' Profile updated!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"UpdatedUsername\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Create Second User (for Admin Tests)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.collectionVariables.set('secondUserId', jsonData.user._id);",
+                  "",
+                  "console.log(' Second user created! ID saved.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"seconduser_{{timestamp}}\",\n  \"email\": \"second_{{timestamp}}@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": " PHOTO TESTS",
+      "item": [
+        {
+          "name": "3.1 Get Gallery - Empty",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "console.log(' Gallery retrieved!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/photos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Upload Photo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Photo has required fields', () => {",
+                  "  pm.expect(jsonData).to.have.property('_id');",
+                  "  pm.expect(jsonData).to.have.property('title');",
+                  "  pm.expect(jsonData).to.have.property('description');",
+                  "  pm.expect(jsonData).to.have.property('imageUrl');",
+                  "  pm.expect(jsonData).to.have.property('cloudinaryPublicId');",
+                  "  pm.expect(jsonData).to.have.property('owner');",
+                  "});",
+                  "",
+                  "pm.test('Cloudinary URL is valid', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.imageUrl).to.include('cloudinary.com');",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('photoId', jsonData._id);",
+                  "",
+                  "console.log(' Photo uploaded! Photo ID: ' + jsonData._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "title",
+                  "type": "text",
+                  "value": "Postman Test Photo"
+                },
+                {
+                  "key": "description",
+                  "type": "text",
+                  "value": "Uploaded using Postman tests"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/photos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos"]
+            }
+          }
+        },
+        {
+          "name": "3.3 Get Gallery - With Photos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Response is an array with photos', () => {",
+                  "  pm.expect(jsonData).to.be.an('array');",
+                  "  pm.expect(jsonData.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "console.log(' Gallery has ' + jsonData.length + ' photos!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/photos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos"]
+            }
+          }
+        },
+        {
+          "name": "3.4 Get Single Photo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Photo has required fields', () => {",
+                  "  pm.expect(jsonData).to.have.property('_id');",
+                  "  pm.expect(jsonData).to.have.property('title');",
+                  "  pm.expect(jsonData).to.have.property('imageUrl');",
+                  "});",
+                  "",
+                  "console.log(' Photo retrieved!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/photos/{{photoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos", "{{photoId}}"]
+            }
+          }
+        },
+        {
+          "name": "3.5 Update Photo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Photo was updated', () => {",
+                  "  pm.expect(jsonData.title).to.eql('Updated Photo Title');",
+                  "  pm.expect(jsonData.description).to.eql('Updated description from Postman.');",
+                  "});",
+                  "",
+                  "console.log(' Photo updated!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Photo Title\",\n  \"description\": \"Updated description from Postman.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/photos/{{photoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos", "{{photoId}}"]
+            }
+          }
+        },
+        {
+          "name": "3.6 Delete Photo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Success message returned', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('message');",
+                  "  pm.expect(jsonData.message).to.include('deleted');",
+                  "});",
+                  "",
+                  "console.log(' Photo deleted!');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/photos/{{photoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos", "{{photoId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": " ADMIN TESTS",
+      "item": [
+        {
+          "name": "4.1 Admin - Get All Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK or 403 Forbidden', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.test('Response is an array of users', () => {",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "  });",
+                  "  pm.test('Passwords are excluded', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    jsonData.forEach(user => {",
+                  "      pm.expect(user).to.not.have.property('password');",
+                  "    });",
+                  "  });",
+                  "  console.log(' Admin: All users retrieved!');",
+                  "} else {",
+                  "  console.log(' Admin access required - user is not admin');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "4.2 Admin - Get All Photos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK or 403 Forbidden', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.test('Response is an array of photos', () => {",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "  });",
+                  "  console.log(' Admin: All photos retrieved!');",
+                  "} else {",
+                  "  console.log(' Admin access required - user is not admin');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/photos/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "photos", "all"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Admin - Promote User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK or 403 Forbidden', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.test('User role changed to admin', () => {",
+                  "    pm.expect(jsonData.user.role).to.eql('admin');",
+                  "  });",
+                  "  console.log(' User promoted to admin!');",
+                  "} else {",
+                  "  console.log(' Admin access required - user is not admin');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{secondUserId}}/promote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{secondUserId}}", "promote"]
+            }
+          }
+        },
+        {
+          "name": "4.4 Admin - Demote User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK or 403 Forbidden', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.test('User role changed to user', () => {",
+                  "    pm.expect(jsonData.user.role).to.eql('user');",
+                  "  });",
+                  "  console.log(' User demoted to user!');",
+                  "} else {",
+                  "  console.log(' Admin access required - user is not admin');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{secondUserId}}/demote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{secondUserId}}", "demote"]
+            }
+          }
+        },
+        {
+          "name": "4.5 Admin - Delete User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK or 403 Forbidden', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.test('Success message returned', () => {",
+                  "    pm.expect(jsonData.message).to.include('deleted');",
+                  "  });",
+                  "  console.log(' User deleted!');",
+                  "} else {",
+                  "  console.log(' Admin access required - user is not admin');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{secondUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{secondUserId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": " SECURITY TESTS",
+      "item": [
+        {
+          "name": "5.1 Profile - No Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', () => {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message is returned', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('message');",
+                  "});",
+                  "",
+                  "console.log(' Security test: No token = 401');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Admin Route - Normal User Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403 Forbidden', () => {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test('Admin access required message', () => {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.message).to.eql('Admin access required');",
+                  "});",
+                  "",
+                  "console.log(' Security test: Normal user denied admin access');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
